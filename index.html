@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE VOID - INFINITE V13</title>
+
+    <style>
+        /* ----------------------------------------------------------------------
+        MODULE 1: THEME CONFIGURATION
+        ----------------------------------------------------------------------
+        */
+        :root {
+            --primary-bg: #020204;
+            --accent-gold: #d4af37;
+            --accent-gold-rgb: 212, 175, 55;
+            --text-main: #ffffff;
+            --text-dim: #555555;
+            --text-ghost: #222222;
+            --danger-red: #ff3e3e;
+            
+            /* Motion Dynamics */
+            --ease-standard: cubic-bezier(0.23, 1, 0.32, 1);
+            --ease-cinematic: cubic-bezier(0.19, 1, 0.22, 1);
+            --transition-slow: 1.5s;
+            --transition-med: 0.8s;
+            --transition-fast: 0.4s;
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 2: GLOBAL RESET
+        ----------------------------------------------------------------------
+        */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 3: ATMOSPHERIC ENGINE
+        ----------------------------------------------------------------------
+        */
+        #void-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.35;
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 4: APPLICATION LAYOUT
+       ----------------------------------------------------------------------
+        */
+        .system-shell {
+            position: relative;
+            z-index: 100;
+            width: 100%;
+            max-width: 460px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            transition: opacity var(--transition-slow) var(--ease-standard);
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 5: VIEWPORT SYSTEM
+        ----------------------------------------------------------------------
+        */
+        .viewport {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: scale(0.96) translateY(25px);
+            transition: 
+                opacity var(--transition-med) var(--ease-cinematic), 
+                transform var(--transition-med) var(--ease-cinematic),
+                filter var(--transition-med) var(--ease-cinematic);
+        }
+
+        .viewport.active {
+            display: flex;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 6: UI COMPONENTS - TYPOGRAPHY
+        ----------------------------------------------------------------------
+        */
+        .branding {
+            text-align: center;
+            margin-bottom: 45px;
+        }
+
+        .branding h1 {
+            font-size: 2.4rem;
+            font-weight: 100;
+            letter-spacing: 20px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            text-shadow: 0 0 25px rgba(255,255,255,0.1);
+        }
+
+        .branding p {
+            font-size: 0.65rem;
+            letter-spacing: 6px;
+            color: var(--text-dim);
+            margin-top: 18px;
+            text-transform: uppercase;
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 7: INTERACTIVE CHAMBER (THE INPUT AREA)
+        ----------------------------------------------------------------------
+        */
+        .void-chamber {
+            width: 100%;
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 45px;
+            position: relative;
+            margin-bottom: 35px;
+            overflow: hidden;
+            backdrop-filter: blur(25px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+        }
+
+        .void-textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent !important;
+            border: none !important;
+            padding: 40px;
+            color: var(--text-main) !important;
+            font-size: 1.2rem;
+            line-height: 1.9;
+            resize: none;
+            font-family: inherit;
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 8: BUTTON ARCHITECTURE
+        ----------------------------------------------------------------------
+        */
+        .action-hub {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .btn-void {
+            padding: 24px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.07);
+            color: var(--text-dim);
+            border-radius: 24px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all var(--transition-fast) var(--ease-standard);
+        }
+
+        .btn-void:active {
+            transform: scale(0.94);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .btn-void-gold {
+            background: var(--accent-gold);
+            color: #000;
+            border: none;
+            box-shadow: 0 15px 45px rgba(var(--accent-gold-rgb), 0.3);
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 9: THE ETERNAL BOARD (PAPAN DUNIA)
+        ----------------------------------------------------------------------
+        */
+        #board-scroller {
+            width: 100%;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        #board-scroller::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .board-entry {
+            background: rgba(255,255,255,0.01);
+            padding: 35px;
+            border-radius: 35px;
+            margin-bottom: 18px;
+            border-left: 4px solid var(--accent-gold);
+            animation: entryFade 1.2s var(--ease-cinematic) forwards;
+        }
+
+        @keyframes entryFade {
+            from { opacity: 0; transform: translateX(-25px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .board-entry p {
+            font-style: italic;
+            font-size: 1.05rem;
+            color: #eee;
+            line-height: 1.7;
+        }
+
+        .board-entry small {
+            display: block;
+            margin-top: 20px;
+            color: var(--text-ghost);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.6rem;
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 10: CINEMATIC OVERLAY SYSTEM
+        ----------------------------------------------------------------------
+        */
+        #overlay-cinema {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+            text-align: center;
+        }
+
+        .lbl-hebat {
+            font-size: 2.6rem;
+            font-weight: 900;
+            letter-spacing: 28px;
+            color: #fff;
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 2.5s var(--ease-cinematic);
+        }
+
+        .lbl-thanks {
+            font-size: 0.8rem;
+            letter-spacing: 14px;
+            color: var(--text-dim);
+            margin-bottom: 55px;
+            opacity: 0;
+            transition: opacity 1.8s;
+        }
+
+        .lbl-quote {
+            font-size: 1.3rem;
+            font-weight: 200;
+            line-height: 2.2;
+            color: #fff;
+            max-width: 340px;
+            opacity: 0;
+            transition: opacity 2.2s;
+        }
+
+        .final-nav {
+            margin-top: 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.2s var(--ease-cinematic);
+            pointer-events: none;
+        }
+
+        .final-nav.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 11: ADMIN CRYPT
+        ----------------------------------------------------------------------
+        */
+        #admin-crypt {
+            position: fixed;
+            inset: 0;
+            background: #040406;
+            z-index: 20000;
+            display: none;
+            flex-direction: column;
+            padding: 60px 30px;
+            overflow-y: auto;
+        }
+
+        .crypt-header {
+            color: var(--danger-red);
+            font-size: 0.85rem;
+            letter-spacing: 12px;
+            text-align: center;
+            margin-bottom: 60px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #111;
+            text-transform: uppercase;
+        }
+
+        .crypt-item {
+            background: #09090b;
+            padding: 25px;
+            border: 1px solid #151518;
+            margin-bottom: 15px;
+            border-radius: 20px; 
+        }
+
+        /* ----------------------------------------------------------------------
+        MODULE 12: VISUAL EFFECTS (FX)
+        ----------------------------------------------------------------------
+        */
+        .fx-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+            width: 100%;
+            height: 100%;
+        }
+
+        #fx-fire { 
+            position: absolute; inset: 0;
+            background: radial-gradient(circle, rgba(255, 60, 0, 0.18), transparent); 
+            opacity: 0; 
+            transition: 1.8s; 
+        }
+
+        #fx-water { 
+            position: absolute;
+            bottom: -100%; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: linear-gradient(to top, rgba(0, 200, 255, 0.18), transparent); 
+            transition: 4.5s var(--ease-standard); 
+        }
+
+    </style>
+</head>
+<body>
+
+    <audio id="audio-engine" loop preload="auto">
+        <source src="lagupenenangdiri.mp3" type="audio/mpeg">
+    </audio>
+
+    <canvas id="void-canvas"></canvas>
+
+    <div id="admin-crypt">
+        <div class="crypt-header">System.Logs.Access // Encrypted</div>
+        <div id="crypt-output"></div>
+        <button class="btn-void" style="width:100%; margin-top:40px; color:var(--danger-red); border-color:var(--danger-red);" onclick="VoidApp.Admin.hide()">TERMINATE ACCESS</button>
+    </div>
+
+    <div id="overlay-cinema">
+        <div id="seq-hebat" class="lbl-hebat">KAMU HEBAT</div>
+        
+        <div id="seq-final" style="display:none; flex-direction:column; align-items:center;">
+            <div class="lbl-thanks">THE VOID : TERIMAKASIH</div>
+            <div id="seq-quote" class="lbl-quote"></div>
+            
+            <div id="seq-buttons" class="final-nav">
+                <button class="btn-void btn-void-gold" style="width:280px" onclick="location.reload()">LANJUT BERCERITA</button>
+                <button class="btn-void" style="width:280px" onclick="VoidApp.Core.killSwitch()">KELUAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="system-shell" id="app-ui">
+        
+        <div class="viewport active" id="view-gateway">
+            <div class="branding">
+                <h1>THE VOID</h1>
+                <p id="trigger-auth" onclick="VoidApp.Admin.auth()">Eternal Sanctuary V13.0</p>
+            </div>
+            <button class="btn-void btn-void-gold" style="width: 240px;" onclick="VoidApp.Core.init()">MULAI</button>
+        </div>
+
+        <div class="viewport" id="view-purge">
+            <div class="branding" style="margin-bottom:20px">
+                <p style="color:#fff">Hancurkan beban pikiranmu...</p>
+            </div>
+            <div class="void-chamber">
+                <div class="fx-layer">
+                    <div id="fx-fire"></div>
+                    <div id="fx-water"></div>
+                </div>
+                <textarea id="inp-purge" class="void-textarea" placeholder="Curhat Di Sini..."></textarea>
+            </div>
+            <div class="action-hub">
+                <button class="btn-void" onclick="VoidApp.Action.execute('fire')">🔥 BAKAR</button>
+                <button class="btn-void" onclick="VoidApp.Action.execute('water')">💧 HANYUTKAN</button>
+            </div>
+        </div>
+
+        <div class="viewport" id="view-legacy">
+            <div class="branding">
+                <h1>DITERIMA</h1>
+            </div>
+            <p style="font-size:0.65rem; color:var(--accent-gold); text-align:center; margin-bottom:20px; opacity:0.8;"># pesan ini akan dapat dilihat oleh semua orang maka beri pesan terbaik</p>
+            <div class="void-chamber" style="height:180px; flex-grow:0;">
+                <textarea id="inp-legacy" class="void-textarea" placeholder="Satu kalimat penguat untuk jiwa lain..."></textarea>
+            </div>
+            <button class="btn-void btn-void-gold" style="width:100%" onclick="VoidApp.Action.pushLegacy()">TEMPEL DI PAPAN DUNIA</button>
+        </div>
+
+        <div class="viewport" id="view-board">
+            <div class="branding">
+                <h1>PAPAN DUNIA</h1>
+            </div>
+            <div id="board-scroller"></div>
+            <button class="btn-void" style="width:100%; margin-top:30px; border-color:var(--accent-gold); color:var(--accent-gold);" onclick="VoidApp.Core.exitSequence()">SELESAI</button>
+        </div>
+
+    </div>
+
+    <script>
+        const VoidApp = {
+            Config: {
+                DB_WALL: 'VOID_V13_WALL_DATA',
+                QUOTE_DELAY: 2500,
+                PHASE_DELAY: 4500
+            },
+            State: {
+                audioActive: false,
+                quotes: [
+                    "Bebanmu kini telah larut dalam keheningan semesta.",
+                    "Kamu sudah melakukan yang terbaik. Istirahatlah sejenak.",
+                    "Tarik napas dalam, biarkan dunia berputar tanpamu kali ini.",
+                    "Setiap luka yang kau tulis telah berubah menjadi debu.",
+                    "Kamu hebat karena berani melepaskan.",
+                    "Terimakasih telah bertahan hingga detik ini."
+                ]
+            },
+            Core: {
+                init() {
+                    VoidApp.UI.navigate('view-gateway', 'view-purge');
+                    if(!VoidApp.State.audioActive) {
+                        const audio = document.getElementById('audio-engine');
+                        audio.play().catch(e => console.warn("Audio blocked"));
+                        VoidApp.State.audioActive = true;
+                    }
+                    VoidApp.Visual.startCanvas();
+                },
+                exitSequence() {
+                    const uiRoot = document.getElementById('app-ui');
+                    const overlay = document.getElementById('overlay-cinema');
+                    const labelHebat = document.getElementById('seq-hebat');
+                    const finalContent = document.getElementById('seq-final');
+                    const quoteTarget = document.getElementById('seq-quote');
+                    const navGroup = document.getElementById('seq-buttons');
+
+                    uiRoot.style.opacity = '0';
+                    setTimeout(() => {
+                        uiRoot.style.display = 'none';
+                        overlay.style.display = 'flex';
+                        setTimeout(() => {
+                            labelHebat.style.opacity = '1';
+                            labelHebat.style.transform = 'scale(1)';
+                        }, 500);
+
+                        setTimeout(() => {
+                            labelHebat.style.opacity = '0';
+                            setTimeout(() => {
+                                labelHebat.style.display = 'none';
+                                finalContent.style.display = 'flex';
+                                quoteTarget.innerText = VoidApp.State.quotes[Math.floor(Math.random() * VoidApp.State.quotes.length)];
+                                setTimeout(() => {
+                                    document.querySelector('.lbl-thanks').style.opacity = '1';
+                                    quoteTarget.style.opacity = '1';
+                                    setTimeout(() => navGroup.classList.add('visible'), 2000);
+                                }, 200);
+                            }, 1500);
+                        }, 4000);
+                    }, 1000);
+                },
+                killSwitch() {
+                    window.close();
+                    alert("Terimakasih telah berkunjung.");
+                }
+            },
+            UI: {
+                navigate(fromId, toId) {
+                    const from = document.getElementById(fromId);
+                    const to = document.getElementById(toId);
+                    from.classList.remove('active');
+                    setTimeout(() => {
+                        from.style.display = 'none';
+                        to.style.display = 'flex';
+                        setTimeout(() => to.classList.add('active'), 50);
+                    }, 800);
+                }
+            },
+            Action: {
+                execute(type) {
+                    const txt = document.getElementById('inp-purge');
+                    if(!txt.value.trim()) return;
+                    
+                    if(type === 'fire') document.getElementById('fx-fire').style.opacity= '1';
+                    else document.getElementById('fx-water').style.bottom = '0';
+                    
+                    txt.style.filter = 'blur(30px)';
+                    txt.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        VoidApp.UI.navigate('view-purge', 'view-legacy');
+                        txt.value = ""; txt.style = "";
+                        document.getElementById('fx-fire').style.opacity = '0';
+                        document.getElementById('fx-water').style.bottom = '-100%';
+                    }, 4000);
+                },
+                pushLegacy() {
+                    const txt = document.getElementById('inp-legacy');
+                    if(!txt.value.trim()) return;
+                    
+                    let data = JSON.parse(localStorage.getItem(VoidApp.Config.DB_WALL) || "[]");
+                    data.unshift(txt.value);
+                localStorage.setItem(VoidApp.Config.DB_WALL, JSON.stringify(data.slice(0, 50)));
+                
+                this.renderBoard();
+                VoidApp.UI.navigate('view-legacy', 'view-board');
+                txt.value = "";
+            },
+            renderBoard() {
+                const container = document.getElementById('board-scroller');
+                const data = JSON.parse(localStorage.getItem(VoidApp.Config.DB_WALL) || "[]");
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#222; margin-top:50px;">BELUM ADA PESAN ABADI</p>';
+                    return;
+                }
+
+                container.innerHTML = data.map(msg => `
+                    <div class="board-entry">
+                        <p>"${msg}"</p>
+                        <small>Seseorang yang sudah lega</small>
+                    </div>
+                `).join('');
+            }
+        },
+                Admin: {
+            auth: function() {
+                const pass = prompt("MASUKKAN KODE AKSES ADMIN:");
+                
+                if (pass === "VOID99") {
+                    alert("ACCESS GRANTED. MEMBUKA DATABASE CERITA...");
+                    document.getElementById('admin-crypt').style.display = 'flex';
+                    this.renderLogs(); // Panggil fungsi buat nampilin cerita
+                } else if (pass !== null) {
+                    alert("ACCESS DENIED!");
+                }
+            },
+
+            renderLogs: function() {
+                const out = document.getElementById('crypt-output');
+                // Ambil data asli dari Papan Dunia
+                const data = JSON.parse(localStorage.getItem(VoidApp.Config.DB_WALL) || "[]");
+
+                if (data.length === 0) {
+                    out.innerHTML = `
+                        <div class="crypt-item" style="color:var(--danger-red); text-align:center;">
+                            > DATABASE_EMPTY: Belum ada cerita yang tersimpan.
+                        </div>`;
+                    return;
+                }
+
+                // Tampilkan semua cerita orang satu-satu
+                out.innerHTML = `
+                    <div style="margin-bottom:20px; color:var(--accent-gold); font-size:0.7rem; letter-spacing:2px;">
+                        TOTAL_ENTRIES: ${data.length}
+                    </div>
+                ` + data.map((msg, index) => `
+                    <div class="crypt-item">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="color:var(--accent-gold); font-size:0.6rem;">ID: 0x0${index}</span>
+                            <span style="color:var(--text-dim); font-size:0.6rem;">STATUS: ARCHIVED</span>
+                        </div>
+                        <p style="color:#fff; font-size:0.9rem; line-height:1.6; font-style:italic;">"${msg}"</p>
+                    </div>
+                `).join('');
+            },
+
+            hide: function() {
+                document.getElementById('admin-crypt').style.display = 'none';
+            }
+        },
+
+
+        Visual: {
+            startCanvas() {
+                const c = document.getElementById('void-canvas'), ctx = c.getContext('2d');
+                let w = c.width = window.innerWidth, h = c.height = window.innerHeight, p = [];
+                
+                for(let i=0; i<60; i++) {
+                    p.push({
+                        x: Math.random() * w, 
+                        y: Math.random() * h, 
+                        r: Math.random() * 1.5, 
+                        s: Math.random() * 0.3
+                    });
+                }
+
+                function draw() {
+                    ctx.clearRect(0,0,w,h); 
+                    ctx.fillStyle = "rgba(255,255,255,0.1)";
+                    p.forEach(i => { 
+                        ctx.beginPath(); 
+                        ctx.arc(i.x, i.y, i.r, 0, 7); 
+                        ctx.fill(); 
+                        i.y -= i.s; 
+                        if(i.y < 0) i.y = h; 
+                    });
+                    requestAnimationFrame(draw);
+                } 
+                draw();
+            }
+        }
+    };
+
+    // Inisialisasi Papan Dunia saat pertama buka
+    window.onload = () => {
+        VoidApp.Action.renderBoard();
+    };
+</script>
+</body>
+</html>
